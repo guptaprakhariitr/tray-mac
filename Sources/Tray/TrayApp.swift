@@ -4,6 +4,7 @@ import TrayUI
 import RemoteConfigKit
 import LicenseKit
 import CommonUI
+import LogKit
 
 @main
 struct TrayApp: App {
@@ -11,18 +12,27 @@ struct TrayApp: App {
     @StateObject private var remote = RemoteConfig() // flags OFF by default
     @StateObject private var license = LicenseStore(verifier: nil, productID: "tray")
 
+    init() {
+        AppLog.bootstrap(appName: "Tray",
+                         version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0")
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(vm)
                 .onAppear {
+                    AppLog.info("main window shown", category: "ui")
                     if vm.clips.items.isEmpty {
                         // Seed with sample data so the drawer isn't empty on first run.
                         vm.add("https://plainware.com/tray")
                         vm.add("#FF8800")
                         vm.add("the quick brown fox")
                     }
-                    Task { await remote.refresh() }
+                    Task {
+                        await remote.refresh()
+                        AppLog.info("remote config refreshed — paid=\(remote.paidEnabled) updates=\(remote.updatesEnabled)", category: "config")
+                    }
                 }
         }
         .windowStyle(.titleBar)

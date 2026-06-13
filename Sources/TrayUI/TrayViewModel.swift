@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import DrawerEngine
+import LogKit
 import UniformTypeIdentifiers
 
 /// A file dropped onto the shelf.
@@ -52,11 +53,18 @@ public final class TrayViewModel: ObservableObject {
     /// Capture the current text contents of the general pasteboard.
     public func captureClipboard() {
         if let s = NSPasteboard.general.string(forType: .string) {
-            clips.add(s)
+            add(s)
+        } else {
+            AppLog.warn("clipboard capture found no text", category: "clipboard")
         }
     }
 
-    public func add(_ text: String) { clips.add(text) }
+    public func add(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        clips.add(trimmed)
+        AppLog.info("clipboard item captured (kind=\(classify(trimmed).rawValue))", category: "clipboard")
+    }
     public func togglePin(_ id: UUID) { clips.togglePin(id) }
 
     /// Copy a clip's text back onto the pasteboard. The user presses Cmd-V
@@ -83,6 +91,7 @@ public final class TrayViewModel: ObservableObject {
 
     public func addFile(_ url: URL) {
         files.insert(ShelfFile(name: url.lastPathComponent, url: url, systemImage: Self.icon(for: url)), at: 0)
+        AppLog.info("file added to shelf: \(url.lastPathComponent)", category: "shelf")
     }
 
     public func removeFile(_ id: UUID) {
@@ -110,5 +119,19 @@ public final class TrayViewModel: ObservableObject {
             .last(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty })
         else { return nil }
         return evaluateInline(line)
+    }
+
+    /// Last inline-calc result we logged, to avoid logging on every keystroke.
+    private var lastLoggedNoteResult: String?
+
+    /// Recompute the inline-calc result and log it once when it changes.
+    /// Call from the notes view's `onChange(of:)`.
+    public func noteChanged() {
+        let result = noteResult
+        guard result != lastLoggedNoteResult else { return }
+        lastLoggedNoteResult = result
+        if let result {
+            AppLog.info("note inline-calc evaluated → \(result)", category: "notes")
+        }
     }
 }

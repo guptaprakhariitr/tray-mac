@@ -149,6 +149,7 @@ public struct ContentView: View {
                 .scrollContentBackground(.hidden)
                 .padding(DS.Space.sm)
                 .background(DS.Color.bgElevated, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
+                .onChange(of: vm.note) { _, _ in vm.noteChanged() }
             if let result = vm.noteResult {
                 HStack(spacing: DS.Space.xs) {
                     Image(systemName: "equal.circle.fill").foregroundStyle(DS.Color.accent)

@@ -20,6 +20,7 @@ let package = Package(
                 .product(name: "RemoteConfigKit", package: "Core"),
                 .product(name: "LicenseKit", package: "Core"),
                 .product(name: "UpdateKit", package: "Core"),
+                .product(name: "LogKit", package: "Core"),
             ],
             path: "Sources/TrayUI"
         ),
@@ -30,6 +31,7 @@ let package = Package(
                 .product(name: "CommonUI", package: "Core"),
                 .product(name: "RemoteConfigKit", package: "Core"),
                 .product(name: "LicenseKit", package: "Core"),
+                .product(name: "LogKit", package: "Core"),
             ],
             path: "Sources/Tray"
         ),
