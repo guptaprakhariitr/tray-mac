@@ -3,12 +3,12 @@ import Foundation
 // MARK: - Clip model
 
 /// What a captured clipboard entry looks like.
-public enum ClipKind: String, Sendable {
+public enum ClipKind: String, Sendable, Codable {
     case text, url, color, image
 }
 
 /// A single clipboard-history entry.
-public struct ClipItem: Identifiable, Sendable {
+public struct ClipItem: Identifiable, Sendable, Codable, Equatable {
     public let id: UUID
     public var kind: ClipKind
     public var text: String
@@ -119,21 +119,34 @@ public final class ClipboardStore: ObservableObject {
     @Published public private(set) var items: [ClipItem] = []
 
     public let capacity: Int
+    private let persistence: EncryptedClipPersistence?
 
-    public init(capacity: Int = 200) {
+    /// - Parameters:
+    ///   - capacity: max retained entries (pinned items survive past the cap).
+    ///   - persistence: encrypted on-disk store. When `nil` the history is
+    ///     in-memory only (used for screenshots/tests).
+    public init(capacity: Int = 200, persistence: EncryptedClipPersistence? = nil) {
         self.capacity = capacity
+        self.persistence = persistence
+        if let loaded = persistence?.load(), !loaded.isEmpty {
+            items = loaded
+        }
     }
 
     /// Add a captured string. Classifies it, ignores empties, and de-dupes when
-    /// it matches the most-recent (non-pinned) entry's text.
+    /// it matches the most-recent entry. The item keeps the *exact* original
+    /// text (including newlines / leading + trailing whitespace) so paste-back
+    /// reproduces precisely what was copied — only the dedup/empty check is
+    /// done on a trimmed copy.
     public func add(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        if let first = items.first, first.text == trimmed { return }
+        if let first = items.first, first.text == text { return }
 
-        let item = ClipItem(kind: classify(trimmed), text: trimmed)
+        let item = ClipItem(kind: classify(trimmed), text: text)
         items.insert(item, at: 0)
         trim()
+        persist()
     }
 
     /// Case-insensitive substring search over the history text.
@@ -147,7 +160,28 @@ public final class ClipboardStore: ObservableObject {
     public func togglePin(_ id: UUID) {
         guard let idx = items.firstIndex(where: { $0.id == id }) else { return }
         items[idx].pinned.toggle()
+        persist()
     }
+
+    /// Remove a single item.
+    public func remove(_ id: UUID) {
+        items.removeAll { $0.id == id }
+        persist()
+    }
+
+    /// Clear everything except pinned items.
+    public func clearUnpinned() {
+        items.removeAll { !$0.pinned }
+        persist()
+    }
+
+    /// Clear the entire history (pinned included) and wipe the on-disk file.
+    public func clearAll() {
+        items.removeAll()
+        persistence?.wipe()
+    }
+
+    private func persist() { persistence?.save(items) }
 
     private func trim() {
         guard items.count > capacity else { return }

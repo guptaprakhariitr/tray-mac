@@ -29,7 +29,10 @@ A free, native macOS utility drawer for the things you keep reaching for.
 
 | Area | Features |
 |---|---|
-| **Clipboard** | Searchable history · kind icons (text / url / color / image) · **pin** favourites to the top · de-dupes consecutive identical copies · click a clip to put it back on the pasteboard |
+| **Clipboard** | **Auto-capture** — turn it on and everything you copy lands in history automatically (toggle in the header, remembered across launches); or capture on demand · searchable history · kind icons (text / url / color / image) · **pin** favourites to the top · delete single clips or **clear unpinned** · de-dupes consecutive identical copies · click a clip to put it back on the pasteboard, **verbatim** (newlines and indentation preserved) |
+| **Private mode** | Set a **passcode** and Tray masks every clip to a couple of characters until you unlock — "enter passcode to view." The passcode is stored only as a salted **SHA-256 hash** in the macOS Keychain (never in plaintext) |
+| **Encrypted at rest** | History persists across launches as an **AES-GCM encrypted** file; the key lives in the Keychain, so the on-disk store is ciphertext, not a readable dump |
+| **Sensitive-data aware** | Items flagged concealed/transient by password managers (the `org.nspasteboard.*` convention + a default ignore list incl. 1Password) are **never recorded** |
 | **File shelf** | **Drag files in** to park them · drag them back **out** to any app · per-type icons (image, pdf, archive, video, audio, text…) · remove with one click |
 | **Quick notes** | A monospaced scratchpad with **inline calculation** — type `12 * 3` (or `(2+2)/4`) and Tray evaluates the last line live |
 | **Classification** | Each clip is classified as **text**, **url**, **color** (`#RGB` / `#RRGGBB`) or **image** for the right icon and behaviour |
@@ -46,7 +49,7 @@ Tray is an **open-source shell** + a **proprietary engine**. In public releases 
 ```
 Sources/Tray         executable (@main)   — app entry, menus, settings, logging bootstrap
 Sources/TrayUI       library (OSS)        — drawer UI + view model
-Engines/DrawerEngine library (proprietary)— clip classification, inline calc, clipboard store
+Engines/DrawerEngine library (proprietary)— clip classification, inline calc, clipboard store, encrypted persistence + Keychain-backed passcode/vault
 Packages/Core        shared modules       — DesignSystem, CommonUI, RemoteConfigKit, LicenseKit, UpdateKit, LogKit, ScreenshotKit
 ```
 

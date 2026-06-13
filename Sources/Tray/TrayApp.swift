@@ -28,12 +28,6 @@ struct TrayApp: App {
                 .onAppear {
                     AppLog.info("main window shown", category: "ui")
                     Task { await versionGate.check() }
-                    if vm.clips.items.isEmpty {
-                        // Seed with sample data so the drawer isn't empty on first run.
-                        vm.add("https://plainware.com/tray")
-                        vm.add("#FF8800")
-                        vm.add("the quick brown fox")
-                    }
                     Task {
                         await remote.refresh()
                         AppLog.info("remote config refreshed — paid=\(remote.paidEnabled) updates=\(remote.updatesEnabled)", category: "config")

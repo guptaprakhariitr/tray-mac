@@ -48,6 +48,29 @@ MainActor.assumeIsolated {
     }
 }
 
+section("ClipboardStore exact-text + delete")
+MainActor.assumeIsolated {
+    let store = ClipboardStore()
+    // The clipping bug: multi-line / padded text must be preserved verbatim.
+    let exact = "  line one\nline two\n"
+    store.add(exact)
+    check(store.items.first?.text == exact, "preserves exact text incl. newlines + whitespace")
+
+    store.add("alpha"); store.add("beta")
+    if let id = store.items.first(where: { $0.text == "alpha" })?.id {
+        store.remove(id)
+        check(!store.items.contains { $0.text == "alpha" }, "remove(id) deletes the clip")
+    } else { check(false, "found 'alpha' to remove") }
+
+    // Pin newest, clear the rest.
+    if let id = store.items.first?.id {
+        store.togglePin(id)
+        store.clearUnpinned()
+        check(store.items.count == 1 && store.items.first?.pinned == true,
+              "clearUnpinned keeps only pinned (\(store.items.count) left)")
+    } else { check(false, "had an item to pin") }
+}
+
 // MARK: Render real screenshots off-screen (no screen-recording permission)
 section("Screenshots")
 let outDir = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "./screenshots")

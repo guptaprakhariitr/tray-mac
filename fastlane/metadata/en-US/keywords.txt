@@ -1,1 +1,1 @@
-clipboard,history,shelf,notes,drawer,paste,pasteboard,productivity,files,scratchpad
+clipboard,history,shelf,notes,drawer,paste,pasteboard,encrypted,private,passcode,productivity,scratchpad

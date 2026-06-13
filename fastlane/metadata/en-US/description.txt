@@ -1,14 +1,18 @@
 Tray puts the three things you keep reaching for into one edge drawer: clipboard history, a file shelf, and quick notes.
 
-Pull out the drawer and you get a searchable clipboard history with kind icons and pinning, a drag-and-drop file shelf for staging files between apps, and a scratchpad that does inline math as you type. Everything is classified and stored entirely on your Mac.
+Turn on auto-capture and everything you copy lands in a searchable history with kind icons and pinning. Add a drag-and-drop file shelf for staging files between apps, and a scratchpad that does inline math as you type. Everything is classified and stored entirely on your Mac.
 
 PRIVACY, BUILT IN
-Tray keeps your clips, files and notes 100% on-device. There is no telemetry in the shipped build and no account. Tray never injects keystrokes into other apps — clicking a clip simply puts it back on the pasteboard, and you press Command-V yourself.
+Tray keeps your clips, files and notes 100% on-device. Your clipboard history is encrypted at rest with AES-GCM, the key held in the macOS Keychain — the on-disk store is ciphertext, never a readable dump. Items that password managers mark as concealed or transient (1Password and the nspasteboard.org convention) are never recorded. Turn on Private Mode to set a passcode that masks every clip until you unlock — and the passcode itself is stored only as a salted hash, never in plaintext. There is no telemetry in the shipped build and no account. Tray never injects keystrokes into other apps — clicking a clip simply puts it back on the pasteboard, and you press Command-V yourself.
 
 FEATURES
+• Auto-capture — copy anything and it appears in history automatically (toggleable, remembered across launches)
 • Searchable clipboard history with kind icons (text, URL, color, image)
-• Pin the clips you reuse most to the top
-• De-dupes consecutive identical copies automatically
+• Pin the clips you reuse most; delete single clips or clear unpinned
+• Copies back verbatim — newlines and indentation preserved
+• Private Mode — passcode-masked clips, passcode stored only as a salted hash
+• Encrypted history at rest (AES-GCM, Keychain-held key)
+• Skips password-manager / transient clipboard items automatically
 • Drag-and-drop file shelf with per-type icons — drag files in and back out
 • Quick notes with inline calculation (type 12 * 3 and see 36)
 • No synthetic paste — sandbox-safe and out of your other apps' input
