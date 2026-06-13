@@ -3,6 +3,7 @@ import CryptoKit
 import LicenseKit
 import UpdateKit
 import RemoteConfigKit
+import VersionGateKit
 
 // Minimal CLT-runnable assertion harness (no XCTest dependency).
 var failures = 0
@@ -67,6 +68,23 @@ MainActor.assumeIsolated {
     let store = LicenseStore(verifier: nil, productID: "glaze")
     check(store.isAvailable("pro", remote: remote), "pro feature free when paid OFF")
     check(!store.shouldPaywall("pro", remote: remote), "no paywall when paid OFF")
+}
+
+// MARK: Version gate thresholds
+section("VersionGate")
+MainActor.assumeIsolated {
+    func status(build: Int, min: Int, latest: Int, force: Bool) -> VersionStatus {
+        let g = VersionGate(projectId: "p", apiKey: "k", appKey: "glaze", currentBuild: build, currentVersion: "1.0")
+        return g.evaluate(AppVersionInfo(minBuild: min, latestBuild: latest, latestVersion: "9", forceUpdate: force, message: "", downloadURL: nil))
+    }
+    check(status(build: 1, min: 1, latest: 1, force: false) == .ok, "current==min==latest → ok")
+    check(status(build: 1, min: 2, latest: 3, force: false).isForced, "below min → force update")
+    if case .updateAvailable = status(build: 2, min: 1, latest: 3, force: false) { check(true, "above min, below latest → update available") } else { check(false, "update available") }
+    check(status(build: 2, min: 1, latest: 3, force: true).isForced, "forceUpdate flag escalates floor to latest")
+    // Firestore REST doc parsing
+    let json = Data(#"{"fields":{"minBuild":{"integerValue":"5"},"latestBuild":{"integerValue":"7"},"latestVersion":{"stringValue":"1.2"},"forceUpdate":{"booleanValue":true},"message":{"stringValue":"hi"},"downloadURL":{"stringValue":"https://x"}}}"#.utf8)
+    let parsed = VersionGate.parse(json)
+    check(parsed?.minBuild == 5 && parsed?.latestBuild == 7 && parsed?.forceUpdate == true && parsed?.downloadURL == "https://x", "parses Firestore version doc")
 }
 
 print("\n" + (failures == 0 ? "✅ ALL CHECKS PASSED" : "❌ \(failures) CHECK(S) FAILED"))
