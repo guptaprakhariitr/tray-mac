@@ -7,6 +7,7 @@ let package = Package(
     products: [
         .library(name: "DesignSystem", targets: ["DesignSystem"]),
         .library(name: "ScreenshotKit", targets: ["ScreenshotKit"]),
+        .library(name: "LogKit", targets: ["LogKit"]),
         .library(name: "SettingsKit", targets: ["SettingsKit"]),
         .library(name: "RemoteConfigKit", targets: ["RemoteConfigKit"]),
         .library(name: "LicenseKit", targets: ["LicenseKit"]),
@@ -16,6 +17,7 @@ let package = Package(
     targets: [
         .target(name: "DesignSystem"),
         .target(name: "ScreenshotKit", dependencies: ["DesignSystem"]),
+        .target(name: "LogKit"),
         .target(name: "SettingsKit"),
         .target(name: "RemoteConfigKit"),
         .target(name: "LicenseKit", dependencies: ["RemoteConfigKit"]),
