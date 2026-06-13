@@ -8,6 +8,7 @@ public struct ContentView: View {
     @EnvironmentObject var vm: TrayViewModel
     @State private var hoveredClip: UUID?
     @State private var showPasscodeSheet = false
+    @State private var detailClip: ClipItem?
 
     public init() {}
 
@@ -25,6 +26,9 @@ public struct ContentView: View {
         .background(DS.Color.bg)
         .sheet(isPresented: $showPasscodeSheet) {
             PasscodeSheet().environmentObject(vm)
+        }
+        .sheet(item: $detailClip) { clip in
+            ClipDetailSheet(clip: clip).environmentObject(vm)
         }
     }
 
@@ -192,6 +196,7 @@ public struct ContentView: View {
 
             HStack(spacing: 2) {
                 if hovered && !vm.isLocked {
+                    iconButton("doc.on.doc", help: "Copy back to the clipboard") { vm.copyToPasteboard(clip) }
                     iconButton("trash", help: "Delete this clip") { vm.remove(clip.id) }
                 }
                 iconButton(clip.pinned ? "pin.fill" : "pin",
@@ -213,9 +218,9 @@ public struct ContentView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { vm.copyToPasteboard(clip) }
+        .onTapGesture { if vm.isLocked { showPasscodeSheet = true } else { detailClip = clip } }
         .onHover { hoveredClip = $0 ? clip.id : (hoveredClip == clip.id ? nil : hoveredClip) }
-        .help(vm.isLocked ? "Locked" : "Click to copy back to the clipboard")
+        .help(vm.isLocked ? "Locked — enter passcode to view" : "Click to open the full clip · ⌥ copy icon to paste back")
     }
 
     private func iconButton(_ name: String, tint: Color = DS.Color.tertiaryLabel,
@@ -410,6 +415,95 @@ struct PasscodeSheet: View {
             vm.setPasscode(code)
             dismiss()
         }
+    }
+}
+
+// MARK: - Clip detail (full content)
+
+/// Full-content view for a single clip — opened by tapping a row. Shows the
+/// complete, selectable text (the list only previews two lines) with copy /
+/// pin / delete / open actions.
+struct ClipDetailSheet: View {
+    @EnvironmentObject var vm: TrayViewModel
+    @Environment(\.dismiss) private var dismiss
+    let clip: ClipItem
+    @State private var copied = false
+
+    /// Live item (pin state can change while the sheet is open).
+    private var current: ClipItem { vm.clips.items.first { $0.id == clip.id } ?? clip }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: DS.Space.md) {
+            HStack(spacing: DS.Space.sm) {
+                Image(systemName: icon).font(.system(size: 18)).foregroundStyle(DS.Color.accent)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(clip.kind.label).font(DS.Font.headline)
+                    Text("\(clip.text.count) characters · \(Self.timestamp(clip.date))")
+                        .font(DS.Font.caption).foregroundStyle(DS.Color.secondaryLabel)
+                }
+                Spacer()
+                if clip.kind == .color, let c = Color(hex: clip.text) {
+                    RoundedRectangle(cornerRadius: 6).fill(c).frame(width: 30, height: 30)
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(DS.Color.separator, lineWidth: 0.5))
+                }
+            }
+
+            ScrollView {
+                Text(clip.text)
+                    .font(clip.kind == .url || clip.kind == .color ? DS.Font.mono : DS.Font.body)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(DS.Space.sm)
+            }
+            .frame(maxWidth: .infinity, minHeight: 160, maxHeight: 360)
+            .background(DS.Color.bgElevated, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
+
+            HStack(spacing: DS.Space.sm) {
+                Button { vm.togglePin(clip.id) } label: {
+                    Label(current.pinned ? "Unpin" : "Pin", systemImage: current.pinned ? "pin.slash" : "pin")
+                }
+                Button(role: .destructive) { vm.remove(clip.id); dismiss() } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+                if clip.kind == .url, let url = Self.url(from: clip.text) {
+                    Button { NSWorkspace.shared.open(url) } label: {
+                        Label("Open", systemImage: "arrow.up.right.square")
+                    }
+                }
+                Spacer()
+                Button("Done") { dismiss() }
+                Button {
+                    vm.copyToPasteboard(clip)
+                    copied = true
+                    Task { try? await Task.sleep(nanoseconds: 1_200_000_000); copied = false }
+                } label: {
+                    Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc")
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(DS.Space.lg)
+        .frame(width: 520)
+    }
+
+    private var icon: String {
+        switch clip.kind {
+        case .text:  return "text.alignleft"
+        case .url:   return "link"
+        case .color: return "paintpalette"
+        case .image: return "photo"
+        }
+    }
+
+    private static func url(from s: String) -> URL? {
+        var t = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.lowercased().hasPrefix("www.") { t = "https://" + t }
+        return URL(string: t)
+    }
+
+    private static func timestamp(_ date: Date) -> String {
+        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .short
+        return f.string(from: date)
     }
 }
 
