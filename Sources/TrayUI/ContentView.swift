@@ -8,6 +8,7 @@ public struct ContentView: View {
     @EnvironmentObject var vm: TrayViewModel
     @State private var hoveredClip: UUID?
     @State private var showPasscodeSheet = false
+    @State private var showSecurityInfo = false
     @State private var detailClip: ClipItem?
 
     public init() {}
@@ -29,6 +30,9 @@ public struct ContentView: View {
         }
         .sheet(item: $detailClip) { clip in
             ClipDetailSheet(clip: clip).environmentObject(vm)
+        }
+        .sheet(isPresented: $showSecurityInfo) {
+            SecurityInfoSheet()
         }
     }
 
@@ -70,22 +74,27 @@ public struct ContentView: View {
 
     @ViewBuilder
     private var privacyControl: some View {
-        if vm.hasPasscode {
-            Button {
-                if vm.isLocked { showPasscodeSheet = true } else { vm.lock() }
-            } label: {
-                Image(systemName: vm.isLocked ? "lock.fill" : "lock.open")
-                    .foregroundStyle(vm.isLocked ? DS.Color.accent : DS.Color.secondaryLabel)
+        if vm.hasPasscode && vm.isLocked {
+            Button { showPasscodeSheet = true } label: {
+                Image(systemName: "lock.fill").foregroundStyle(DS.Color.accent)
             }
-            .help(vm.isLocked ? "Locked — enter passcode to reveal clips" : "Lock private mode")
+            .help("Locked — enter passcode to reveal clips")
         } else {
             Menu {
-                Button("Set Passcode…") { showPasscodeSheet = true }
+                if vm.hasPasscode {
+                    Button { vm.lock() } label: { Label("Lock now", systemImage: "lock") }
+                    Button { showPasscodeSheet = true } label: { Label("Change / Remove Passcode…", systemImage: "key") }
+                } else {
+                    Button { showPasscodeSheet = true } label: { Label("Set Passcode…", systemImage: "lock") }
+                }
+                Divider()
+                Button { showSecurityInfo = true } label: { Label("How your data is protected…", systemImage: "checkmark.shield") }
             } label: {
-                Image(systemName: "lock.slash")
+                Image(systemName: vm.hasPasscode ? "lock.open" : "lock.slash")
+                    .foregroundStyle(vm.hasPasscode ? DS.Color.secondaryLabel : DS.Color.tertiaryLabel)
             }
             .menuIndicator(.hidden)
-            .help("Private mode — set a passcode to mask clipboard contents")
+            .help(vm.hasPasscode ? "Private mode (unlocked) & security" : "Private mode & security")
         }
     }
 
@@ -415,6 +424,66 @@ struct PasscodeSheet: View {
             vm.setPasscode(code)
             dismiss()
         }
+    }
+}
+
+// MARK: - Security & privacy info
+
+/// The rows describing how Tray protects your data. Reused by the lock-menu
+/// sheet and the Settings window.
+public struct SecurityInfoView: View {
+    let showTitle: Bool
+    public init(showTitle: Bool = true) { self.showTitle = showTitle }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: DS.Space.md) {
+            if showTitle {
+                Label("How your data is protected", systemImage: "checkmark.shield.fill")
+                    .font(DS.Font.title)
+            }
+            row("externaldrive.badge.timemachine", "Encrypted on disk",
+                "Your clipboard history is saved to your Mac encrypted with AES-GCM. The file is ciphertext — it can't be read directly, even by other apps.")
+            row("key.fill", "The key lives in your Keychain",
+                "The encryption key is generated on your Mac and stored in the macOS Keychain, never in a file next to the data and never uploaded.")
+            row("hand.raised.fill", "Why macOS asks for permission",
+                "The first time Tray stores or reads that key, macOS may ask you to allow access to your Keychain. This is expected — choose “Always Allow” so Tray can protect your history without asking again.")
+            row("lock.fill", "Optional passcode",
+                "Set a passcode to mask every clip until you unlock. The passcode is stored only as a slow, salted hash (PBKDF2) — never in plaintext, and it can't be recovered if you forget it.")
+            row("eye.slash.fill", "Password managers respected",
+                "Items that apps like 1Password mark as concealed or transient are never recorded.")
+            row("network.slash", "Stays on your Mac",
+                "Clips, files and notes never leave your device. No account, no analytics in the shipped build.")
+        }
+    }
+
+    private func row(_ icon: String, _ title: String, _ detail: String) -> some View {
+        HStack(alignment: .top, spacing: DS.Space.sm) {
+            Image(systemName: icon).foregroundStyle(DS.Color.accent).frame(width: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(DS.Font.headline)
+                Text(detail).font(DS.Font.caption).foregroundStyle(DS.Color.secondaryLabel)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+/// Explains how Tray protects your data and why macOS may ask for Keychain
+/// permission. Reachable from the lock menu.
+public struct SecurityInfoSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    public init() {}
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: DS.Space.md) {
+            SecurityInfoView()
+            HStack {
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(DS.Space.lg)
+        .frame(width: 460)
     }
 }
 

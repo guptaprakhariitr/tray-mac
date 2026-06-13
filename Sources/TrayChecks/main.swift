@@ -71,6 +71,19 @@ MainActor.assumeIsolated {
     } else { check(false, "had an item to pin") }
 }
 
+section("Passcode PBKDF2")
+do {
+    let salt = Data((0..<16).map { UInt8($0) })
+    let a = PasscodeStore.pbkdf2("hunter2", salt: salt, rounds: 10_000)
+    let b = PasscodeStore.pbkdf2("hunter2", salt: salt, rounds: 10_000)
+    let c = PasscodeStore.pbkdf2("hunter3", salt: salt, rounds: 10_000)
+    let d = PasscodeStore.pbkdf2("hunter2", salt: Data(repeating: 9, count: 16), rounds: 10_000)
+    check(a.count == 32, "derives a 32-byte key")
+    check(a == b, "same passcode + salt is deterministic")
+    check(a != c, "different passcode → different key")
+    check(a != d, "different salt → different key")
+}
+
 // MARK: Render real screenshots off-screen (no screen-recording permission)
 section("Screenshots")
 let outDir = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "./screenshots")

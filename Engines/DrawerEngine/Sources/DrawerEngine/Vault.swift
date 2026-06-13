@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import CommonCrypto
 import Security
 
 // MARK: - Keychain
@@ -85,11 +86,18 @@ public struct Vault {
 // MARK: - Passcode (hashed, never stored in plaintext)
 
 /// A private-mode passcode. We never store the passcode itself — only a random
-/// 16-byte salt followed by `SHA-256(salt || passcode)`. Verification recomputes
-/// the hash; there is no way back to the original passcode from what's stored.
+/// 16-byte salt and `PBKDF2-HMAC-SHA256(passcode, salt)`. PBKDF2 with a high
+/// iteration count makes brute-forcing a stolen hash expensive; there is no way
+/// back to the original passcode from what's stored.
+///
+/// Stored blob layout (version 2): `[0x02][rounds: UInt32 BE][salt: 16][digest: 32]`.
+/// A 48-byte legacy blob (`salt || SHA-256(salt||passcode)`) is still accepted
+/// on verify for backward compatibility, then transparently upgraded on next set.
 public struct PasscodeStore {
     let service: String
     private let account = "drawer.passcode.v1"
+    private let rounds: UInt32 = 120_000
+    private let version: UInt8 = 2
 
     public init(service: String) { self.service = service }
 
@@ -98,25 +106,59 @@ public struct PasscodeStore {
     public func set(_ passcode: String) {
         var salt = Data(count: 16)
         _ = salt.withUnsafeMutableBytes { SecRandomCopyBytes(kSecRandomDefault, 16, $0.baseAddress!) }
-        let digest = hash(passcode, salt: salt)
-        Keychain.set(salt + digest, service: service, account: account)
+        let digest = Self.pbkdf2(passcode, salt: salt, rounds: rounds)
+        var blob = Data([version])
+        var be = rounds.bigEndian
+        blob.append(Data(bytes: &be, count: 4))
+        blob.append(salt)
+        blob.append(digest)
+        Keychain.set(blob, service: service, account: account)
     }
 
     public func verify(_ passcode: String) -> Bool {
-        guard let blob = Keychain.get(service: service, account: account), blob.count == 16 + 32 else { return false }
-        let salt = blob.prefix(16)
-        let stored = blob.suffix(32)
-        let computed = hash(passcode, salt: Data(salt))
-        // Constant-time-ish compare.
-        return stored.elementsEqual(computed)
+        guard let blob = Keychain.get(service: service, account: account) else { return false }
+        // Version-2 PBKDF2 blob.
+        if blob.count == 1 + 4 + 16 + 32, blob[blob.startIndex] == version {
+            let r = blob.subdata(in: blob.index(blob.startIndex, offsetBy: 1)..<blob.index(blob.startIndex, offsetBy: 5))
+            let n = r.withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+            let salt = blob.subdata(in: blob.index(blob.startIndex, offsetBy: 5)..<blob.index(blob.startIndex, offsetBy: 21))
+            let stored = blob.suffix(32)
+            return constantTimeEqual(stored, Self.pbkdf2(passcode, salt: salt, rounds: n))
+        }
+        // Legacy version-1 salted-SHA256 blob (48 bytes).
+        if blob.count == 16 + 32 {
+            let salt = blob.prefix(16)
+            let stored = blob.suffix(32)
+            var input = Data(salt); input.append(Data(passcode.utf8))
+            return constantTimeEqual(stored, Data(SHA256.hash(data: input)))
+        }
+        return false
     }
 
     public func clear() { Keychain.delete(service: service, account: account) }
 
-    private func hash(_ passcode: String, salt: Data) -> Data {
-        var input = salt
-        input.append(Data(passcode.utf8))
-        return Data(SHA256.hash(data: input))
+    private func constantTimeEqual(_ a: some DataProtocol, _ b: some DataProtocol) -> Bool {
+        let ab = Array(a), bb = Array(b)
+        guard ab.count == bb.count else { return false }
+        var diff: UInt8 = 0
+        for i in 0..<ab.count { diff |= ab[i] ^ bb[i] }
+        return diff == 0
+    }
+
+    public static func pbkdf2(_ passcode: String, salt: Data, rounds: UInt32) -> Data {
+        let pwd = Array(passcode.utf8)
+        var derived = [UInt8](repeating: 0, count: 32)
+        let status = salt.withUnsafeBytes { saltPtr in
+            CCKeyDerivationPBKDF(
+                CCPBKDFAlgorithm(kCCPBKDF2),
+                pwd, pwd.count,
+                saltPtr.bindMemory(to: UInt8.self).baseAddress, salt.count,
+                CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256),
+                rounds,
+                &derived, derived.count
+            )
+        }
+        return status == kCCSuccess ? Data(derived) : Data()
     }
 }
 

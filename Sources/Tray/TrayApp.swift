@@ -48,15 +48,21 @@ struct TrayApp: App {
         }
 
         Settings {
-            VStack(spacing: 16) {
-                AboutView(appName: "Tray",
-                          version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
-                          tagline: "Clipboard, shelf and notes in one edge drawer.",
-                          replaces: "paid clipboard managers")
-                LicenseSettingsView(license: license, remote: remote)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    AboutView(appName: "Tray",
+                              version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
+                              tagline: "Clipboard, shelf and notes in one edge drawer.",
+                              replaces: "paid clipboard managers")
+                    GroupBox("Security & privacy") {
+                        SecurityInfoView(showTitle: false).padding(8)
+                    }
+                    LicenseSettingsView(license: license, remote: remote)
+                }
+                .padding(24)
+                .frame(width: 460)
             }
-            .padding(24)
-            .frame(width: 460)
+            .frame(height: 640)
         }
     }
 }
@@ -78,14 +84,16 @@ private struct RootView: View {
                     accent: Color(red: 0.18, green: 0.65, blue: 0.55),
                     steps: [
                         .init(systemImage: "doc.on.clipboard", title: "Clipboard history",
-                              detail: "Everything you copy is kept here — search it and pin what matters."),
+                              detail: "Turn on Auto and everything you copy is kept here — search it, open the full text, and pin what matters."),
                         .init(systemImage: "tray.and.arrow.down", title: "File shelf",
                               detail: "Drag files in to stash them, then drag them out wherever you need."),
                         .init(systemImage: "note.text", title: "Quick notes",
                               detail: "Jot things down — type a calculation like 12 * 3 and it solves inline."),
+                        .init(systemImage: "checkmark.shield.fill", title: "Private & encrypted",
+                              detail: "Your history is encrypted on your Mac with a key in the Keychain — macOS may ask you to allow that the first time (choose “Always Allow”). Set a passcode any time from the lock menu to mask your clips."),
                     ],
                     primaryTitle: "Get Started",
-                    footnote: "Everything stays on your Mac.",
+                    footnote: "Everything stays on your Mac — encrypted, no account, no tracking.",
                     primaryAction: { onboarded = true; showOnboarding = false },
                     secondaryAction: { onboarded = true; showOnboarding = false }
                 )
