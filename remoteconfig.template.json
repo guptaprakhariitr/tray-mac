@@ -1,0 +1,27 @@
+{
+  "parameters": {
+    "paidFeaturesEnabled": {
+      "defaultValue": { "value": "false" },
+      "valueType": "BOOLEAN",
+      "description": "Master switch for paid/pro features. OFF until monetization is turned on."
+    },
+    "updatesEnabled": {
+      "defaultValue": { "value": "false" },
+      "valueType": "BOOLEAN",
+      "description": "Allow the in-app Sparkle updater to check/notify. OFF for now."
+    },
+    "forceUpdate": {
+      "defaultValue": { "value": "false" },
+      "valueType": "BOOLEAN",
+      "description": "Hard force-update gate. OFF for now."
+    },
+    "minSupportedVersion": {
+      "defaultValue": { "value": "0.0.0" },
+      "valueType": "STRING",
+      "description": "Minimum app version permitted when forceUpdate is on."
+    }
+  },
+  "parameterGroups": {},
+  "conditions": [],
+  "version": {}
+}
