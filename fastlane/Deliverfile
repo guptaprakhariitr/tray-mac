@@ -1,0 +1,5 @@
+# Metadata + screenshots live under fastlane/metadata and fastlane/screenshots.
+app_identifier(ENV["BUNDLE_ID"] || "com.plainware.tray")
+submit_for_review(false)
+automatic_release(false)
+force(true)

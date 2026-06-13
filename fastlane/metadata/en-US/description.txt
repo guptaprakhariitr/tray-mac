@@ -1,0 +1,17 @@
+Tray puts the three things you keep reaching for into one edge drawer: clipboard history, a file shelf, and quick notes.
+
+Pull out the drawer and you get a searchable clipboard history with kind icons and pinning, a drag-and-drop file shelf for staging files between apps, and a scratchpad that does inline math as you type. Everything is classified and stored entirely on your Mac.
+
+PRIVACY, BUILT IN
+Tray keeps your clips, files and notes 100% on-device. There is no telemetry in the shipped build and no account. Tray never injects keystrokes into other apps — clicking a clip simply puts it back on the pasteboard, and you press Command-V yourself.
+
+FEATURES
+• Searchable clipboard history with kind icons (text, URL, color, image)
+• Pin the clips you reuse most to the top
+• De-dupes consecutive identical copies automatically
+• Drag-and-drop file shelf with per-type icons — drag files in and back out
+• Quick notes with inline calculation (type 12 * 3 and see 36)
+• No synthetic paste — sandbox-safe and out of your other apps' input
+• 100% local, no analytics, no account
+
+Free and open source.
