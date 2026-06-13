@@ -26,6 +26,7 @@ targets:
       - path: Sources/TrayUI
       - path: Resources/Assets.xcassets
       - path: Resources/PrivacyInfo.xcprivacy
+      - path: Resources/GoogleService-Info.plist
     dependencies:
       - package: Core
         product: DesignSystem

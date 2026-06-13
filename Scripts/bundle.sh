@@ -70,6 +70,11 @@ fi
 
 if [[ -n "$ICON" && -f "$ICON" ]]; then cp "$ICON" "$CONTENTS/Resources/AppIcon.icns"; fi
 
+# Bundle Firebase config (version-gating) if present — must be copied BEFORE signing.
+if [[ -f "$PKG_DIR/Resources/GoogleService-Info.plist" ]]; then
+  cp "$PKG_DIR/Resources/GoogleService-Info.plist" "$CONTENTS/Resources/GoogleService-Info.plist"
+fi
+
 # Ad-hoc sign (stable identifier so TCC grants are less churny across rebuilds).
 echo "==> ad-hoc codesign"
 SIGN_ARGS=(--force --sign - --identifier "$BUNDLE_ID" --timestamp=none)
