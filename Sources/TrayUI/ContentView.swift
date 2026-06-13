@@ -32,7 +32,9 @@ public struct ContentView: View {
                 Spacer()
                 Button { vm.captureClipboard() } label: {
                     Label("Capture", systemImage: "square.and.arrow.down.on.square")
+                        .labelStyle(.titleAndIcon)
                 }
+                .help("Capture the current clipboard contents into history")
             }
             Picker("", selection: $vm.pane) {
                 ForEach(TrayPane.allCases, id: \.self) { p in
@@ -83,6 +85,7 @@ public struct ContentView: View {
                     .foregroundStyle(clip.pinned ? DS.Color.accent : DS.Color.tertiaryLabel)
             }
             .buttonStyle(.plain)
+            .help(clip.pinned ? "Unpin this clip" : "Pin this clip to the top")
         }
     }
 
@@ -137,6 +140,7 @@ public struct ContentView: View {
                 Image(systemName: "xmark.circle.fill").foregroundStyle(DS.Color.tertiaryLabel)
             }
             .buttonStyle(.plain).padding(4)
+            .help("Remove from shelf")
         }
     }
 
