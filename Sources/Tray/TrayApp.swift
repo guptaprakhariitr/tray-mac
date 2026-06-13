@@ -19,7 +19,7 @@ struct TrayApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
                 .environmentObject(vm)
                 .onAppear {
                     AppLog.info("main window shown", category: "ui")
@@ -59,5 +59,37 @@ struct TrayApp: App {
             .padding(24)
             .frame(width: 460)
         }
+    }
+}
+
+/// Wraps the drawer and shows the first-run welcome sheet.
+private struct RootView: View {
+    @EnvironmentObject var vm: TrayViewModel
+    @AppStorage("com.plainware.tray.onboarding.v1") private var onboarded = false
+    @State private var showOnboarding = false
+
+    var body: some View {
+        ContentView()
+            .onAppear { if !onboarded { showOnboarding = true } }
+            .sheet(isPresented: $showOnboarding) {
+                OnboardingView(
+                    appName: "Tray",
+                    tagline: "Clipboard history, a file shelf and quick notes — in one drawer.",
+                    glyph: "tray.full.fill",
+                    accent: Color(red: 0.18, green: 0.65, blue: 0.55),
+                    steps: [
+                        .init(systemImage: "doc.on.clipboard", title: "Clipboard history",
+                              detail: "Everything you copy is kept here — search it and pin what matters."),
+                        .init(systemImage: "tray.and.arrow.down", title: "File shelf",
+                              detail: "Drag files in to stash them, then drag them out wherever you need."),
+                        .init(systemImage: "note.text", title: "Quick notes",
+                              detail: "Jot things down — type a calculation like 12 * 3 and it solves inline."),
+                    ],
+                    primaryTitle: "Get Started",
+                    footnote: "Everything stays on your Mac.",
+                    primaryAction: { onboarded = true; showOnboarding = false },
+                    secondaryAction: { onboarded = true; showOnboarding = false }
+                )
+            }
     }
 }
