@@ -9,6 +9,10 @@ Tray processes your clips, files and notes **entirely on your Mac**.
 - **No analytics or tracking** is included in the shipped build.
 - **No account** is required.
 
+## Update checks
+
+On launch, Tray makes a single anonymous HTTPS request to a version service (Google Firestore) to check whether a critical update is required. Only the app's version is compared against the latest published version — **no personal data, identifiers or usage data are sent or stored**. If the device is offline or the service is unreachable, the check fails open: Tray starts normally and is never blocked.
+
 If a future version adds optional cloud or analytics features, this policy and the App Store privacy label will be updated, and any such feature will be opt-in.
 
 Questions: open an issue at https://github.com/guptaprakhariitr/tray-mac

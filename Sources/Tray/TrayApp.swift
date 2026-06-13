@@ -4,6 +4,7 @@ import TrayUI
 import RemoteConfigKit
 import LicenseKit
 import CommonUI
+import VersionGateKit
 import LogKit
 
 @main
@@ -11,6 +12,8 @@ struct TrayApp: App {
     @StateObject private var vm = TrayViewModel()
     @StateObject private var remote = RemoteConfig() // flags OFF by default
     @StateObject private var license = LicenseStore(verifier: nil, productID: "tray")
+    @StateObject private var versionGate = VersionGate.fromBundle(appKey: "tray")
+        ?? VersionGate(projectId: "", apiKey: "", appKey: "tray", currentBuild: 0, currentVersion: "0")
 
     init() {
         AppLog.bootstrap(appName: "Tray",
@@ -21,8 +24,10 @@ struct TrayApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(vm)
+                .versionGate(versionGate)
                 .onAppear {
                     AppLog.info("main window shown", category: "ui")
+                    Task { await versionGate.check() }
                     if vm.clips.items.isEmpty {
                         // Seed with sample data so the drawer isn't empty on first run.
                         vm.add("https://plainware.com/tray")
