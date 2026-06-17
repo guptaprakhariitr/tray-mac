@@ -5,6 +5,58 @@ import DrawerEngine
 import TrayUI
 import ScreenshotKit
 
+/// Consistent Plainware App Store marketing hero (typographic; ImageRenderer-safe —
+/// only gradients/shapes/Text, no blur/shadow). Shared layout across all 5 apps;
+/// each app supplies its own name, tagline, benefit bullets and accent color.
+struct HeroShot: View {
+    let appName: String
+    let tagline: String
+    let bullets: [String]
+    let accent: Color
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [Color(white: 0.12), Color(white: 0.035)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            RadialGradient(colors: [accent.opacity(0.30), .clear],
+                           center: .topTrailing, startRadius: 40, endRadius: 1300)
+            VStack(alignment: .leading, spacing: 0) {
+                Text("PLAINWARE")
+                    .font(.system(size: 26, weight: .bold)).tracking(8)
+                    .foregroundStyle(accent)
+                Spacer().frame(height: 40)
+                Text(appName)
+                    .font(.system(size: 150, weight: .heavy)).foregroundStyle(.white)
+                Spacer().frame(height: 24)
+                Text(tagline)
+                    .font(.system(size: 56, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer().frame(height: 48)
+                VStack(alignment: .leading, spacing: 26) {
+                    ForEach(bullets, id: \.self) { b in
+                        HStack(spacing: 20) {
+                            ZStack {
+                                Circle().fill(accent).frame(width: 38, height: 38)
+                                Text("✓").font(.system(size: 20, weight: .bold)).foregroundStyle(.white)
+                            }
+                            Text(b).font(.system(size: 36)).foregroundStyle(.white.opacity(0.88))
+                        }
+                    }
+                }
+                Spacer()
+                HStack(spacing: 14) {
+                    RoundedRectangle(cornerRadius: 3).fill(accent).frame(width: 60, height: 8)
+                    Text("100% on-device  ·  Free & open source  ·  macOS")
+                        .font(.system(size: 28, weight: .medium)).foregroundStyle(.white.opacity(0.6))
+                }
+            }
+            .padding(150)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        }
+    }
+}
+
 var failures = 0
 func check(_ cond: Bool, _ msg: String) {
     if cond { print("  ✓ \(msg)") } else { print("  ✗ \(msg)"); failures += 1 }
@@ -96,10 +148,18 @@ MainActor.assumeIsolated {
         check(FileManager.default.fileExists(atPath: url.path), "rendered drawer UI → \(url.lastPathComponent)")
     } catch { check(false, "drawer UI render: \(error)") }
 
+    let hero = HeroShot(
+        appName: "Tray",
+        tagline: "Everything you reach for,\none edge drawer.",
+        bullets: ["Searchable clipboard history",
+                  "Drag-in / drag-out file shelf",
+                  "Quick notes with inline math"],
+        accent: Color(red: 0.16, green: 0.78, blue: 0.62)
+    )
     do {
         let url = outDir.appendingPathComponent("02-marketing.png")
-        try ViewSnapshotter.renderStoreShot(scene, size: .s2560x1600, to: url)
-        check(FileManager.default.fileExists(atPath: url.path), "rendered marketing shot → \(url.lastPathComponent)")
+        try ViewSnapshotter.renderStoreShot(hero, size: .s2560x1600, to: url)
+        check(FileManager.default.fileExists(atPath: url.path), "rendered marketing hero → \(url.lastPathComponent)")
     } catch { check(false, "marketing render: \(error)") }
 }
 
