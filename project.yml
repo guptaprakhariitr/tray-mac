@@ -16,18 +16,49 @@ packages:
     path: Engines/DrawerEngine
 
 targets:
+  TrayUI:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Sources/TrayUI
+    dependencies:
+      - package: Core
+        product: DesignSystem
+      - package: Core
+        product: CommonUI
+      - package: Core
+        product: SettingsKit
+      - package: Core
+        product: RemoteConfigKit
+      - package: Core
+        product: LicenseKit
+      - package: Core
+        product: UpdateKit
+      - package: Core
+        product: LogKit
+      - package: DrawerEngine
+        product: DrawerEngine
+    settings:
+      base:
+        PRODUCT_NAME: TrayUI
+        PRODUCT_BUNDLE_IDENTIFIER: com.plainware.tray.ui
+        SWIFT_VERSION: "5.9"
+        DEVELOPMENT_TEAM: ${DEVELOPMENT_TEAM}
+        CODE_SIGN_STYLE: Automatic
+        DEFINES_MODULE: YES
+        GENERATE_INFOPLIST_FILE: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+
   Tray:
     type: application
     platform: macOS
-    # The app target compiles its own sources + the OSS UI library sources, and
-    # links the shared Core products + the proprietary engine package.
     sources:
       - path: Sources/Tray
-      - path: Sources/TrayUI
       - path: Resources/Assets.xcassets
       - path: Resources/PrivacyInfo.xcprivacy
       - path: Resources/GoogleService-Info.plist
     dependencies:
+      - target: TrayUI
       - package: Core
         product: DesignSystem
       - package: Core
