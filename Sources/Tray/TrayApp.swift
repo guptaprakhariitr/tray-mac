@@ -16,7 +16,7 @@ struct TrayApp: App {
         ?? VersionGate(projectId: "", apiKey: "", appKey: "tray", currentBuild: 0, currentVersion: "0")
 
     init() {
-        AppLog.bootstrap(appName: "Tray",
+        AppLog.bootstrap(appName: "TrayShelf",
                          version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0")
     }
 
@@ -50,7 +50,7 @@ struct TrayApp: App {
         Settings {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    AboutView(appName: "Tray",
+                    AboutView(appName: "TrayShelf",
                               version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.1.0",
                               tagline: "Clipboard, shelf and notes in one edge drawer.",
                               replaces: "paid clipboard managers")
@@ -78,7 +78,7 @@ private struct RootView: View {
             .onAppear { if !onboarded { showOnboarding = true } }
             .sheet(isPresented: $showOnboarding) {
                 OnboardingView(
-                    appName: "Tray",
+                    appName: "TrayShelf",
                     tagline: "Clipboard history, a file shelf and quick notes — in one drawer.",
                     glyph: "tray.full.fill",
                     accent: Color(red: 0.18, green: 0.65, blue: 0.55),

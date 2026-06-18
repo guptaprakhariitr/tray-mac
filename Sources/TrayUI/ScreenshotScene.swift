@@ -3,7 +3,7 @@ import AppKit
 import DesignSystem
 import DrawerEngine
 
-/// An `ImageRenderer`-safe reproduction of the Tray edge-drawer for App Store
+/// An `ImageRenderer`-safe reproduction of the TrayShelf edge-drawer for App Store
 /// screenshots. The live app uses List/ScrollView/segmented Picker which
 /// ImageRenderer can't snapshot, so this is built from plain primitives only
 /// (VStack/HStack/ZStack/Text/Image/Shape/RoundedRectangle/Capsule/Circle/
@@ -27,7 +27,7 @@ public struct ScreenshotScene: View {
 
     private var headline: some View {
         VStack(alignment: .leading, spacing: DS.Space.lg) {
-            Text("Tray")
+            Text("TrayShelf")
                 .font(.system(size: 64, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
             Text("Clipboard history, a file shelf and\nquick notes — one edge drawer.")
@@ -73,7 +73,7 @@ public struct ScreenshotScene: View {
     private var drawerHeader: some View {
         VStack(spacing: DS.Space.sm) {
             HStack {
-                Text("Tray").font(.system(size: 28, weight: .bold, design: .rounded))
+                Text("TrayShelf").font(.system(size: 28, weight: .bold, design: .rounded))
                 Spacer()
                 Image(systemName: "square.and.arrow.down.on.square")
                     .font(.system(size: 18)).foregroundStyle(.secondary)

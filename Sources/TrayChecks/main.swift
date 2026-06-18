@@ -149,7 +149,7 @@ MainActor.assumeIsolated {
     } catch { check(false, "drawer UI render: \(error)") }
 
     let hero = HeroShot(
-        appName: "Tray",
+        appName: "TrayShelf",
         tagline: "Everything you reach for,\none edge drawer.",
         bullets: ["Searchable clipboard history",
                   "Drag-in / drag-out file shelf",

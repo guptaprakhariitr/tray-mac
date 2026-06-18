@@ -41,7 +41,7 @@ public struct ContentView: View {
     private var header: some View {
         VStack(spacing: DS.Space.sm) {
             HStack(spacing: DS.Space.sm) {
-                Text("Tray").font(DS.Font.display)
+                Text("TrayShelf").font(DS.Font.display)
                 Spacer()
 
                 // Auto-capture toggle
@@ -429,7 +429,7 @@ struct PasscodeSheet: View {
 
 // MARK: - Security & privacy info
 
-/// The rows describing how Tray protects your data. Reused by the lock-menu
+/// The rows describing how TrayShelf protects your data. Reused by the lock-menu
 /// sheet and the Settings window.
 public struct SecurityInfoView: View {
     let showTitle: Bool
@@ -446,7 +446,7 @@ public struct SecurityInfoView: View {
             row("key.fill", "The key lives in your Keychain",
                 "The encryption key is generated on your Mac and stored in the macOS Keychain, never in a file next to the data and never uploaded.")
             row("hand.raised.fill", "Why macOS asks for permission",
-                "The first time Tray stores or reads that key, macOS may ask you to allow access to your Keychain. This is expected — choose “Always Allow” so Tray can protect your history without asking again.")
+                "The first time TrayShelf stores or reads that key, macOS may ask you to allow access to your Keychain. This is expected — choose “Always Allow” so TrayShelf can protect your history without asking again.")
             row("lock.fill", "Optional passcode",
                 "Set a passcode to mask every clip until you unlock. The passcode is stored only as a slow, salted hash (PBKDF2) — never in plaintext, and it can't be recovered if you forget it.")
             row("eye.slash.fill", "Password managers respected",
@@ -468,7 +468,7 @@ public struct SecurityInfoView: View {
     }
 }
 
-/// Explains how Tray protects your data and why macOS may ask for Keychain
+/// Explains how TrayShelf protects your data and why macOS may ask for Keychain
 /// permission. Reachable from the lock menu.
 public struct SecurityInfoSheet: View {
     @Environment(\.dismiss) private var dismiss
