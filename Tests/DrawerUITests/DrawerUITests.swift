@@ -207,4 +207,22 @@ final class DrawerUITests: XCTestCase {
         XCTAssertNil(Color(hex: "fff"))         // missing #
         XCTAssertNil(Color(hex: "#xyz"))        // not hex
     }
+
+    // MARK: Launch splash — flag starts true, dismiss() flips it false
+
+    func testSplashStartsShownAndDismisses() {
+        let model = SplashModel()
+        XCTAssertTrue(model.showSplash)          // shown once per launch on open
+        model.dismiss()                          // timer / tap / keypress path
+        XCTAssertFalse(model.showSplash)
+        model.dismiss()                          // idempotent
+        XCTAssertFalse(model.showSplash)
+    }
+
+    func testSplashCarriesTrayShelfTagline() {
+        XCTAssertEqual(SplashModel.appName, "TrayShelf")
+        XCTAssertEqual(SplashModel.tagline,
+                       "Your clipboard, files & notes — one keystroke away.")
+        XCTAssertFalse(SplashModel.meaning.isEmpty)
+    }
 }

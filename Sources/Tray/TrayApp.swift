@@ -75,6 +75,7 @@ private struct RootView: View {
 
     var body: some View {
         ContentView()
+            .splashOverlay()
             .onAppear { if !onboarded { showOnboarding = true } }
             .sheet(isPresented: $showOnboarding) {
                 OnboardingView(

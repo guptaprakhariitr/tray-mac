@@ -41,7 +41,13 @@ public struct ContentView: View {
     private var header: some View {
         VStack(spacing: DS.Space.sm) {
             HStack(spacing: DS.Space.sm) {
-                Text("TrayShelf").font(DS.Font.display)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("TrayShelf").font(DS.Font.display)
+                    Text(SplashModel.tagline)
+                        .font(DS.Font.caption)
+                        .foregroundStyle(DS.Color.secondaryLabel)
+                        .lineLimit(1).truncationMode(.tail)
+                }
                 Spacer()
 
                 // Auto-capture toggle
