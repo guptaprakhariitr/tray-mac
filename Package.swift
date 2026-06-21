@@ -44,5 +44,10 @@ let package = Package(
             ],
             path: "Sources/TrayChecks"
         ),
+        .testTarget(
+            name: "DrawerUITests",
+            dependencies: ["TrayUI", "DrawerEngine"],
+            path: "Tests/DrawerUITests"
+        ),
     ]
 )

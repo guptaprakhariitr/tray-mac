@@ -61,7 +61,7 @@ public final class TrayViewModel: ObservableObject {
     public let clips: ClipboardStore
 
     private let passcode: PasscodeStore
-    private let service = "com.plainware.tray"
+    private let service: String
     private var bag = Set<AnyCancellable>()
     private var pollTimer: Timer?
     private var lastChangeCount = NSPasteboard.general.changeCount
@@ -86,13 +86,27 @@ public final class TrayViewModel: ObservableObject {
         .init("com.apple.is-remote-clipboard"),
     ]
 
-    public init() {
-        let store = EncryptedClipPersistence(service: service)
-        self.clips = ClipboardStore(persistence: store)
+    public convenience init() {
+        self.init(service: "com.plainware.tray",
+                  persistence: EncryptedClipPersistence(service: "com.plainware.tray"))
+    }
+
+    /// Designated initializer. Production code uses `init()`; tests inject an
+    /// isolated `service` (and usually `persistence: nil` for in-memory history
+    /// and `monitorClipboard: false` to avoid touching the live pasteboard) so
+    /// they never pollute the real Keychain / Application Support container.
+    /// Behaviour for the production path is unchanged.
+    public init(service: String,
+                persistence: EncryptedClipPersistence? = nil,
+                monitorClipboard: Bool = true) {
+        self.service = service
+        self.clips = ClipboardStore(persistence: persistence)
         self.passcode = PasscodeStore(service: service)
         self.hasPasscode = passcode.isSet
         self.isLocked = passcode.isSet           // start locked if a passcode exists
-        self.autoCapture = UserDefaults.standard.object(forKey: Keys.autoCapture) as? Bool ?? true
+        self.autoCapture = monitorClipboard
+            ? (UserDefaults.standard.object(forKey: Keys.autoCapture) as? Bool ?? true)
+            : false
 
         // Re-publish the store's changes so views observing the view model
         // refresh immediately when clips are added / removed / pinned.

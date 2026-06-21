@@ -145,6 +145,7 @@ public struct ContentView: View {
                 Image(systemName: "lock.fill")
                 Text("Private mode — tap to enter your passcode and reveal clips")
                     .font(DS.Font.caption)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer()
             }
             .foregroundStyle(DS.Color.accent)
@@ -288,7 +289,9 @@ public struct ContentView: View {
     private func fileTile(_ file: ShelfFile) -> some View {
         VStack(spacing: DS.Space.xs) {
             Image(systemName: file.systemImage).font(.system(size: 34)).foregroundStyle(DS.Color.accent)
-            Text(file.name).font(DS.Font.caption).lineLimit(2).multilineTextAlignment(.center)
+            Text(file.name).font(DS.Font.caption)
+                .lineLimit(2).truncationMode(.middle)
+                .multilineTextAlignment(.center)
         }
         .frame(width: 96, height: 96)
         .padding(DS.Space.sm)
@@ -316,6 +319,8 @@ public struct ContentView: View {
                 HStack(spacing: DS.Space.xs) {
                     Image(systemName: "equal.circle.fill").foregroundStyle(DS.Color.accent)
                     Text(result).font(DS.Font.headline).foregroundStyle(DS.Color.accent)
+                        .lineLimit(1).truncationMode(.middle)
+                        .textSelection(.enabled)
                 }
             }
         }
@@ -509,6 +514,7 @@ struct ClipDetailSheet: View {
                     Text(clip.kind.label).font(DS.Font.headline)
                     Text("\(clip.text.count) characters · \(Self.timestamp(clip.date))")
                         .font(DS.Font.caption).foregroundStyle(DS.Color.secondaryLabel)
+                        .lineLimit(1).truncationMode(.tail)
                 }
                 Spacer()
                 if clip.kind == .color, let c = Color(hex: clip.text) {

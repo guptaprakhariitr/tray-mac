@@ -8,5 +8,8 @@ let package = Package(
     name: "DrawerEngine",
     platforms: [.macOS(.v14)],
     products: [.library(name: "DrawerEngine", targets: ["DrawerEngine"])],
-    targets: [.target(name: "DrawerEngine")]
+    targets: [
+        .target(name: "DrawerEngine"),
+        .testTarget(name: "DrawerEngineTests", dependencies: ["DrawerEngine"]),
+    ]
 )
