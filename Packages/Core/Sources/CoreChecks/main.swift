@@ -33,6 +33,25 @@ check(UpdatePolicy.evaluate(flags: f2, currentVersion: "1.4.0") == .forced(min: 
 var f3 = FeatureFlags(); f3.forceUpdate = true; f3.minSupportedVersion = "1.5.0"; f3.updatesEnabled = true
 check(UpdatePolicy.evaluate(flags: f3, currentVersion: "1.5.0") == .ok, "not forced at/above min")
 
+// MARK: GitHub release parsing
+section("GitHubReleaseFetcher")
+check(GitHubReleaseFetcher.latestURL(owner: "guptaprakhariitr", repo: "tray-mac").absoluteString
+        == "https://api.github.com/repos/guptaprakhariitr/tray-mac/releases/latest", "builds latest-release URL")
+let relJSON = Data(#"""
+{"tag_name":"v1.2.0","name":"TrayShelf 1.2.0","html_url":"https://github.com/guptaprakhariitr/tray-mac/releases/tag/v1.2.0","body":"notes","draft":false,"prerelease":false,
+ "assets":[{"name":"TrayShelf_1.2.0_aarch64.dmg","browser_download_url":"https://github.com/guptaprakhariitr/tray-mac/releases/download/v1.2.0/TrayShelf_1.2.0_aarch64.dmg"}]}
+"""#.utf8)
+let parsedRel = GitHubReleaseFetcher.parseLatest(from: relJSON)
+check(parsedRel?.tagName == "v1.2.0", "parses tag_name")
+check(parsedRel?.dmgURL?.lastPathComponent == "TrayShelf_1.2.0_aarch64.dmg", "picks .dmg asset")
+check(parsedRel?.version == SemVer("1.2.0"), "release version reads from tag")
+check(parsedRel.map { $0.version > SemVer("1.0.0") } == true, "1.2.0 newer than running 1.0.0")
+check(parsedRel.map { $0.version > SemVer("1.2.0") } == false, "same version is not an update")
+check(GitHubReleaseFetcher.parseLatest(from: Data("{}".utf8)) == nil, "rejects payload missing tag/url")
+let draftJSON = Data(#"{"tag_name":"v9.9.9","html_url":"https://x/y","draft":true}"#.utf8)
+check(GitHubReleaseFetcher.parseLatest(from: draftJSON) == nil, "ignores draft releases")
+check(parsedRel?.downloadURL.lastPathComponent == "TrayShelf_1.2.0_aarch64.dmg", "downloadURL prefers DMG asset")
+
 // MARK: License verification
 section("License verification")
 func makeLicense(_ license: License, key: Curve25519.Signing.PrivateKey) throws -> String {

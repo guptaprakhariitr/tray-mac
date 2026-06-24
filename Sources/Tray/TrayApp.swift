@@ -6,6 +6,7 @@ import LicenseKit
 import CommonUI
 import VersionGateKit
 import LogKit
+import UpdateKit
 
 @main
 struct TrayApp: App {
@@ -14,6 +15,7 @@ struct TrayApp: App {
     @StateObject private var license = LicenseStore(verifier: nil, productID: "tray")
     @StateObject private var versionGate = VersionGate.fromBundle(appKey: "tray")
         ?? VersionGate(projectId: "", apiKey: "", appKey: "tray", currentBuild: 0, currentVersion: "0")
+    @StateObject private var updater = GitHubReleaseUpdater.fromBundle(owner: "guptaprakhariitr", repo: "tray-mac")
 
     init() {
         AppLog.bootstrap(appName: "TrayShelf",
@@ -25,6 +27,7 @@ struct TrayApp: App {
             RootView()
                 .environmentObject(vm)
                 .versionGate(versionGate)
+                .gitHubUpdatePrompt(updater)
                 .onAppear {
                     AppLog.info("main window shown", category: "ui")
                     Task { await versionGate.check() }
@@ -32,10 +35,15 @@ struct TrayApp: App {
                         await remote.refresh()
                         AppLog.info("remote config refreshed — paid=\(remote.paidEnabled) updates=\(remote.updatesEnabled)", category: "config")
                     }
+                    updater.checkOnLaunch()
                 }
         }
         .windowStyle(.titleBar)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") { updater.checkForUpdates() }
+                    .disabled(!updater.canCheckForUpdates)
+            }
             CommandGroup(replacing: .newItem) {
                 Button("Capture Clipboard") { vm.captureClipboard() }
                     .keyboardShortcut("v", modifiers: [.command, .shift])
